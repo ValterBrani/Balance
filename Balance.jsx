@@ -78,7 +78,7 @@ function AuthScreen() {
   const githubLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: window.location.href }
+      options: { redirectTo: `${window.location.origin}/Balance/` }
     });
   };
 
