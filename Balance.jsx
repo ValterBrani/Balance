@@ -71,7 +71,7 @@ function AuthScreen() {
       ? supabase.auth.signInWithPassword({ email, password:pass })
       : supabase.auth.signUp({ email, password:pass });
     const { error:err } = await fn;
-    if (err) setError(err.message);
+    if (err) setError(mode === 'login' ? 'Courriel ou mot de passe incorrect.' : 'Impossible de créer le compte. Vérifiez votre courriel.');
     setLoading(false);
   };
 
