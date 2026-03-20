@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Balance</title>
+    <script>
+      // Redirect to index.html to let the React app handle routing
+      const path = window.location.pathname.replace('/Balance/', '/');
+      sessionStorage.redirect = path;
+      window.location.href = '/Balance/';
+    </script>
+  </head>
+  <body></body>
+</html>
