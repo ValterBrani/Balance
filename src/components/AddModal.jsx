@@ -15,6 +15,7 @@ export default function AddModal({ cats, onAdd, onClose }) {
     recurring: false,
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ amount: '', desc: '' });
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -24,9 +25,23 @@ export default function AddModal({ cats, onAdd, onClose }) {
   };
 
   const submit = async () => {
-    if (!form.amount || !form.desc || !form.catId) return;
+    const amount = parseFloat(form.amount);
+    const desc = form.desc.trim();
+    if (!form.catId) return;
+
+    if (!form.amount || Number.isNaN(amount) || amount <= 0) {
+      setErrors((prev) => ({ ...prev, amount: 'Le montant doit etre superieur a 0.' }));
+      return;
+    }
+
+    if (!desc) {
+      setErrors((prev) => ({ ...prev, desc: 'La description est obligatoire.' }));
+      return;
+    }
+
+    setErrors({ amount: '', desc: '' });
     setLoading(true);
-    await onAdd({ ...form, amount: parseFloat(form.amount) });
+    await onAdd({ ...form, desc, amount });
     setLoading(false);
     onClose();
   };
@@ -68,7 +83,21 @@ export default function AddModal({ cats, onAdd, onClose }) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
           <div>
             <label style={{ fontSize: 12, color: C.textSec, marginBottom: 5, display: 'block' }}>Montant ($)</label>
-            <input type="number" placeholder="0.00" value={form.amount} onChange={(e) => set('amount', e.target.value)} style={{ fontSize: 20, fontWeight: 600 }} />
+            <input
+              type="number"
+              placeholder="0.00"
+              value={form.amount}
+              onChange={(e) => {
+                set('amount', e.target.value);
+                if (errors.amount && parseFloat(e.target.value) > 0) {
+                  setErrors((prev) => ({ ...prev, amount: '' }));
+                }
+              }}
+              style={{ fontSize: 20, fontWeight: 600, borderColor: errors.amount ? C.exp : C.border }}
+            />
+            {errors.amount && (
+              <div style={{ color: C.exp, fontSize: 12, marginTop: 6 }}>{errors.amount}</div>
+            )}
           </div>
           <div>
             <label style={{ fontSize: 12, color: C.textSec, marginBottom: 5, display: 'block' }}>Date</label>
@@ -78,7 +107,20 @@ export default function AddModal({ cats, onAdd, onClose }) {
 
         <div style={{ marginBottom: 12 }}>
           <label style={{ fontSize: 12, color: C.textSec, marginBottom: 5, display: 'block' }}>Description</label>
-          <input placeholder="ex: IGA - Epicerie" value={form.desc} onChange={(e) => set('desc', e.target.value)} />
+          <input
+            placeholder="ex: IGA - Epicerie"
+            value={form.desc}
+            onChange={(e) => {
+              set('desc', e.target.value);
+              if (errors.desc && e.target.value.trim()) {
+                setErrors((prev) => ({ ...prev, desc: '' }));
+              }
+            }}
+            style={{ borderColor: errors.desc ? C.exp : C.border }}
+          />
+          {errors.desc && (
+            <div style={{ color: C.exp, fontSize: 12, marginTop: 6 }}>{errors.desc}</div>
+          )}
         </div>
 
         <div style={{ marginBottom: 20 }}>
