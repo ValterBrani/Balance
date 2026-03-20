@@ -30,8 +30,11 @@ export default function App() {
   }, []);
 
   const seedCategories = async (userId) => {
-    const toInsert = DEFAULT_CATS.map((c) => ({ ...c, user_id: userId, is_default: true }));
-    const { data } = await supabase.from('categories').insert(toInsert).select();
+    const toInsert = DEFAULT_CATS.map((c) => ({ ...c, user_id: userId }));
+    console.log('Inserting categories:', toInsert);
+    const { data, error } = await supabase.from('categories').insert(toInsert).select();
+    if (error) console.error('Seed error:', error);
+    console.log('Seed result:', data);
     return data || [];
   };
 
