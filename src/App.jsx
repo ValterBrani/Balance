@@ -39,9 +39,14 @@ export default function App() {
     if (!session) return;
     setLoading(true);
 
-    let { data: catsData } = await supabase.from('categories').select('*').order('created_at');
+    let { data: catsData, error: catsError } = await supabase.from('categories').select('*').order('created_at');
+    console.log('Categories loaded:', catsData, 'Error:', catsError);
+    if (catsError) console.error('Categories Error:', catsError);
+    
     if (!catsData || catsData.length === 0) {
+      console.log('Seeding categories...');
       catsData = await seedCategories(session.user.id);
+      console.log('Seeded categories:', catsData);
     }
     setCats(catsData || []);
 
