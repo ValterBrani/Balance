@@ -13,6 +13,13 @@ export default function AuthScreen() {
 
   const submit = async () => {
     if (!email || !pass) return;
+    
+    // Validation basique du mot de passe
+    if (mode === 'signup' && pass.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères.');
+      return;
+    }
+    
     setLoading(true);
     setError('');
 
@@ -23,14 +30,18 @@ export default function AuthScreen() {
     const { error: err } = await fn;
     if (err) {
       setError(mode === 'login' ? 'Courriel ou mot de passe incorrect.' : 'Impossible de creer le compte. Verifiez votre courriel.');
+    } else {
+      // Nettoyer le mot de passe après soumission réussie
+      setPass('');
     }
     setLoading(false);
   };
 
   const githubLogin = async () => {
+    const redirectUrl = new URL('/Balance/', window.location.origin).toString();
     await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: `${window.location.origin}/Balance/` },
+      options: { redirectTo: redirectUrl },
     });
   };
 

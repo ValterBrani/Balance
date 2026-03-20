@@ -31,10 +31,8 @@ export default function App() {
 
   const seedCategories = async (userId) => {
     const toInsert = DEFAULT_CATS.map((c) => ({ ...c, user_id: userId }));
-    console.log('Inserting categories:', toInsert);
     const { data, error } = await supabase.from('categories').insert(toInsert).select();
     if (error) console.error('Seed error:', error);
-    console.log('Seed result:', data);
     return data || [];
   };
 
@@ -43,13 +41,10 @@ export default function App() {
     setLoading(true);
 
     let { data: catsData, error: catsError } = await supabase.from('categories').select('*').order('created_at');
-    console.log('Categories loaded:', catsData, 'Error:', catsError);
     if (catsError) console.error('Categories Error:', catsError);
     
     if (!catsData || catsData.length === 0) {
-      console.log('Seeding categories...');
       catsData = await seedCategories(session.user.id);
-      console.log('Seeded categories:', catsData);
     }
     setCats(catsData || []);
 
