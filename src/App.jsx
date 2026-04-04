@@ -125,13 +125,44 @@ export default function App() {
   };
 
   const updateNwEntry = async (accountId, entry) => {
-    const { data, error } = await supabase.from('net_worth_entries').upsert({
-      ...entry,
-      user_id: session.user.id,
-      account_id: accountId,
-    }, { onConflict: 'user_id,account_id,date' }).select().single();
-    if (error) console.error('Error updating entry:', error);
-    if (data) setNwEntries((es) => [data, ...es.filter((e) => !(e.account_id === accountId && e.date === entry.date))]);
+    const dateStr = entry.date || new Date().toISOString().split('T')[0];
+
+    // Check if entry exists (don't use .single() to avoid 406 error)
+    const { data: existing, error: existError } = await supabase.from('net_worth_entries')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .eq('account_id', accountId)
+      .eq('date', dateStr);
+
+    let result;
+    if (existing && existing.length > 0) {
+      // Update existing
+      result = await supabase.from('net_worth_entries')
+        .update({ amount: entry.amount, note: entry.note })
+        .eq('id', existing[0].id)
+        .select()
+        .single();
+    } else {
+      // Insert new
+      result = await supabase.from('net_worth_entries')
+        .insert({
+          user_id: session.user.id,
+          account_id: accountId,
+          amount: entry.amount,
+          date: dateStr,
+          note: entry.note,
+        })
+        .select()
+        .single();
+    }
+
+    if (result.error) console.error('Error updating entry:', result.error);
+    if (result.data) {
+      setNwEntries((es) => {
+        const filtered = es.filter((e) => !(e.account_id === accountId && e.date === dateStr));
+        return [result.data, ...filtered];
+      });
+    }
   };
 
   const deleteNwEntry = async (id) => {
