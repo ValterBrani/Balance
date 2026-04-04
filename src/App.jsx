@@ -341,12 +341,12 @@ export default function App() {
     <>
       <style>{gs}</style>
       <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: 80 }}>
-        <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 }}>
-          <div>
-            <div style={{ fontSize: 11, color: C.textSec, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Budget</div>
-            <div style={{ fontSize: 17, fontWeight: 600, fontFamily: "'DM Serif Display',serif", color: C.accentL }}>Balance</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '12px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: 11, color: C.textSec, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Budget</div>
+              <div style={{ fontSize: 17, fontWeight: 600, fontFamily: "'DM Serif Display',serif", color: C.accentL }}>Balance</div>
+            </div>
             <div style={{ display: 'flex', gap: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px' }}>
               {['month', 'year'].map((m) => (
                 <button key={m} onClick={() => setViewMode(m)} style={{ padding: '5px 12px', borderRadius: 16, background: viewMode === m ? C.accent : 'transparent', color: viewMode === m ? '#000' : C.textSec, fontSize: 11, fontWeight: 500, border: 'none', transition: 'all .15s' }}>
@@ -354,11 +354,11 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.card, border: `1px solid ${C.border}`, borderRadius: 24, padding: '6px 14px' }}>
-              <button onClick={viewMode === 'month' ? prevMonth : prevYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronLeft size={16} /></button>
-              <span style={{ fontSize: 13, fontWeight: 500, minWidth: viewMode === 'month' ? 110 : 40, textAlign: 'center', color: C.text }}>{viewMode === 'month' ? `${MONTHS_FR[month]} ${year}` : year}</span>
-              <button onClick={viewMode === 'month' ? nextMonth : nextYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronRight size={16} /></button>
-            </div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, background: C.card, border: `1px solid ${C.border}`, borderRadius: 24, padding: '6px 14px' }}>
+            <button onClick={viewMode === 'month' ? prevMonth : prevYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronLeft size={16} /></button>
+            <span style={{ fontSize: 13, fontWeight: 500, minWidth: viewMode === 'month' ? 110 : 40, textAlign: 'center', color: C.text }}>{viewMode === 'month' ? `${MONTHS_FR[month]} ${year}` : year}</span>
+            <button onClick={viewMode === 'month' ? nextMonth : nextYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronRight size={16} /></button>
           </div>
         </div>
 

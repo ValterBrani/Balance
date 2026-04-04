@@ -72,7 +72,7 @@ export default function Dashboard({ txs, cats, month, year, viewMode = 'month' }
         <MetCard label={viewMode === 'year' ? 'Taux epargne moyen' : 'Taux epargne'} value={`${savings}%`} color={C.accent} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: 14, marginBottom: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14, marginBottom: 20 }}>
         <Card style={{ padding: '18px 16px' }}>
           <h3 style={{ fontSize: 13, color: C.textSec, marginBottom: 14, fontWeight: 500 }}>Repartition depenses</h3>
           {pieData.length > 0 ? (
