@@ -5,6 +5,7 @@ import { DEFAULT_CATS, DEFAULT_NET_WORTH_ACCOUNTS } from '@/utils/defaults';
 import { C, gs, MONTHS_FR } from '@/utils/theme';
 import { Spinner } from '@/components/ui';
 import AddModal from '@/components/AddModal';
+import RecurringModal from '@/components/RecurringModal';
 import AuthScreen from '@/views/AuthScreen';
 import Dashboard from '@/views/Dashboard';
 import Transactions from '@/views/Transactions';
@@ -26,6 +27,8 @@ export default function App() {
   const [showAdd, setShowAdd] = useState(false);
   const [nwAccounts, setNwAccounts] = useState([]);
   const [nwEntries, setNwEntries] = useState([]);
+  const [missingRecurring, setMissingRecurring] = useState([]);
+  const [ignoredPeriods, setIgnoredPeriods] = useState(new Set());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -90,6 +93,7 @@ export default function App() {
       description: form.desc,
       date: form.date,
       recurring: form.recurring,
+      recurring_frequency: form.recurring ? form.recurring_frequency : null,
     }).select().single();
     if (data) setTxs((ts) => [data, ...ts]);
   };
@@ -193,6 +197,130 @@ export default function App() {
   };
 
   const signOut = () => supabase.auth.signOut();
+
+  // --- Recurring transaction detection ---
+  const detectMissingRecurring = useCallback(() => {
+    const periodKey = `${year}-${month}`;
+    if (ignoredPeriods.has(periodKey)) { setMissingRecurring([]); return; }
+
+    const recurring = txs.filter((t) => t.recurring);
+    if (recurring.length === 0) { setMissingRecurring([]); return; }
+
+    const periodStart = new Date(year, month, 1);
+    const periodEnd = new Date(year, month + 1, 0);
+    const today = new Date();
+    const effectiveEnd = periodEnd > today ? today : periodEnd;
+
+    const missing = [];
+
+    // Group recurring by unique source (description + cat_id + type + amount + frequency)
+    const groups = {};
+    recurring.forEach((tx) => {
+      const key = `${tx.description}|${tx.cat_id}|${tx.type}|${tx.amount}`;
+      if (!groups[key] || new Date(tx.date) > new Date(groups[key].date)) {
+        groups[key] = tx;
+      }
+    });
+
+    Object.values(groups).forEach((src) => {
+      const freq = src.recurring_frequency || 'monthly';
+      const srcDate = new Date(src.date);
+      const expectedDates = [];
+
+      if (freq === 'monthly') {
+        // Same day each month in the selected period
+        const day = Math.min(srcDate.getDate(), periodEnd.getDate());
+        const expected = new Date(year, month, day);
+        if (expected >= periodStart && expected <= effectiveEnd) {
+          expectedDates.push(expected);
+        }
+      } else {
+        // biweekly (+14) or weekly (+7)
+        const interval = freq === 'biweekly' ? 14 : 7;
+        let cursor = new Date(srcDate);
+        // Advance cursor to first date in or after period start
+        while (cursor < periodStart) {
+          cursor = new Date(cursor.getTime() + interval * 86400000);
+        }
+        while (cursor <= effectiveEnd) {
+          expectedDates.push(new Date(cursor));
+          cursor = new Date(cursor.getTime() + interval * 86400000);
+        }
+      }
+
+      // Check which expected dates are missing
+      expectedDates.forEach((expected) => {
+        const dateStr = expected.toISOString().split('T')[0];
+        const exists = txs.some((t) =>
+          t.description === src.description &&
+          t.cat_id === src.cat_id &&
+          t.type === src.type &&
+          t.date === dateStr
+        );
+        if (!exists) {
+          missing.push({
+            description: src.description,
+            cat_id: src.cat_id,
+            type: src.type,
+            amount: parseFloat(src.amount),
+            date: dateStr,
+            recurring: true,
+            recurring_frequency: freq,
+          });
+        }
+      });
+    });
+
+    setMissingRecurring(missing);
+  }, [txs, month, year, ignoredPeriods]);
+
+  useEffect(() => { if (!loading && txs.length > 0) detectMissingRecurring(); }, [detectMissingRecurring, loading]);
+
+  const applyRecurring = async (items) => {
+    const toInsert = items.map((tx) => ({
+      user_id: session.user.id,
+      amount: tx.amount,
+      type: tx.type,
+      cat_id: tx.cat_id,
+      description: tx.description,
+      date: tx.date,
+      recurring: true,
+      recurring_frequency: tx.recurring_frequency,
+    }));
+    const { data, error } = await supabase.from('transactions').insert(toInsert).select();
+    if (error) console.error('Error applying recurring:', error);
+    if (data) setTxs((ts) => [...data, ...ts]);
+    // Mark period as handled so unchecked items don't come back
+    setIgnoredPeriods((s) => new Set(s).add(`${year}-${month}`));
+    setMissingRecurring([]);
+  };
+
+  const ignoreRecurring = () => {
+    setIgnoredPeriods((s) => new Set(s).add(`${year}-${month}`));
+    setMissingRecurring([]);
+  };
+
+  const stopRecurring = async (tx) => {
+    // Set recurring: false on all matching source transactions
+    const { error } = await supabase.from('transactions')
+      .update({ recurring: false, recurring_frequency: null })
+      .eq('user_id', session.user.id)
+      .eq('description', tx.description)
+      .eq('cat_id', tx.cat_id)
+      .eq('type', tx.type)
+      .eq('recurring', true);
+    if (error) console.error('Error stopping recurring:', error);
+    // Update local state
+    setTxs((ts) => ts.map((t) =>
+      t.description === tx.description && t.cat_id === tx.cat_id && t.type === tx.type && t.recurring
+        ? { ...t, recurring: false, recurring_frequency: null }
+        : t
+    ));
+    // Remove this tx from missing list
+    setMissingRecurring((m) => m.filter((r) =>
+      !(r.description === tx.description && r.cat_id === tx.cat_id && r.type === tx.type)
+    ));
+  };
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); };
   const prevYear = () => setYear((y) => y - 1);
@@ -262,6 +390,7 @@ export default function App() {
         </div>
 
         {showAdd && <AddModal cats={cats} onAdd={addTransaction} onClose={() => setShowAdd(false)} />}
+        {missingRecurring.length > 0 && <RecurringModal missing={missingRecurring} cats={cats} onApply={applyRecurring} onIgnore={ignoreRecurring} onStopRecurring={stopRecurring} />}
       </div>
     </>
   );

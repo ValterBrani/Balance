@@ -13,6 +13,7 @@ export default function AddModal({ cats, onAdd, onClose }) {
     desc: '',
     date: today,
     recurring: false,
+    recurring_frequency: 'monthly',
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({ amount: '', desc: '' });
@@ -130,7 +131,7 @@ export default function AddModal({ cats, onAdd, onClose }) {
           </select>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 22 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: form.recurring ? 12 : 22 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button onClick={() => set('recurring', !form.recurring)} style={{ width: 38, height: 22, borderRadius: 11, border: 'none', background: form.recurring ? C.accent : C.textMut, position: 'relative', transition: 'background .2s' }}>
               <span style={{ position: 'absolute', top: 2, left: form.recurring ? 18 : 2, width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left .2s' }} />
@@ -139,6 +140,16 @@ export default function AddModal({ cats, onAdd, onClose }) {
           </div>
           <Repeat size={14} color={form.recurring ? C.accent : C.textMut} />
         </div>
+
+        {form.recurring && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 22 }}>
+            {[['monthly', 'Mensuelle'], ['biweekly', 'Aux 2 sem.'], ['weekly', 'Hebdo']].map(([val, label]) => (
+              <button key={val} onClick={() => set('recurring_frequency', val)} style={{ flex: 1, padding: '8px 6px', borderRadius: 10, border: `1px solid ${form.recurring_frequency === val ? C.accent : C.border}`, background: form.recurring_frequency === val ? C.accentBg : 'transparent', color: form.recurring_frequency === val ? C.accent : C.textSec, fontSize: 11, fontWeight: 500, transition: 'all .15s' }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <button onClick={submit} disabled={loading} style={{ width: '100%', padding: '13px 0', background: C.accent, color: '#fff', border: 'none', borderRadius: 12, fontSize: 15, fontWeight: 600, opacity: loading ? 0.7 : 1 }}>
           {loading ? 'Enregistrement...' : 'Ajouter'}
