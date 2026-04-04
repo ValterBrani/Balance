@@ -170,7 +170,7 @@ function EditModal({ account, latestEntry, snapshotDate, onSave, onClose }) {
         <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} step="0.01" style={{ marginBottom: 16 }} placeholder="Montant" />
         <div style={{ display: 'flex', gap: 12 }}>
           <button onClick={onClose} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontWeight: 500 }}>Annuler</button>
-          <button onClick={() => onSave(parseFloat(amount))} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: 'none', background: C.accent, color: '#000', fontWeight: 600 }}>Sauvegarder</button>
+          <button onClick={() => { const val = parseFloat(amount); if (!isNaN(val) && val >= 0) onSave(val); }} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: 'none', background: C.accent, color: '#000', fontWeight: 600 }}>Sauvegarder</button>
         </div>
       </div>
     </div>

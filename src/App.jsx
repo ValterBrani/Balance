@@ -112,8 +112,8 @@ export default function App() {
 
   const addCategory = async (cat) => {
     const { data } = await supabase.from('categories').insert({
-      user_id: session.user.id,
       ...cat,
+      user_id: session.user.id,
       is_default: false,
     }).select().single();
     if (data) setCats((cs) => [...cs, data]);
