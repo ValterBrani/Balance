@@ -48,11 +48,12 @@ export default function NetWorth({ accounts, entries, month, year, onAddEntry, o
 
   // Evolution chart - last 12 months
   const chartData = Array.from({ length: 12 }, (_, i) => {
-    const m = (month - 5 + i + 12) % 12;
-    const y = i < (6 - month) ? year - 1 : year;
+    const d = new Date(year, month - 11 + i, 1);
+    const m = d.getMonth();
+    const y = d.getFullYear();
     const monthEntries = entries.filter((e) => {
-      const d = new Date(e.date);
-      return d.getMonth() === m && d.getFullYear() === y;
+      const ed = new Date(e.date);
+      return ed.getMonth() === m && ed.getFullYear() === y;
     });
     const monthNetWorth = monthEntries.reduce((sum, e) => {
       const acc = accounts.find((a) => a.id === e.account_id);
@@ -170,7 +171,7 @@ function EditModal({ account, latestEntry, snapshotDate, onSave, onClose }) {
         <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} step="0.01" style={{ marginBottom: 16 }} placeholder="Montant" />
         <div style={{ display: 'flex', gap: 12 }}>
           <button onClick={onClose} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: `1px solid ${C.border}`, background: 'transparent', color: C.text, fontWeight: 500 }}>Annuler</button>
-          <button onClick={() => onSave(parseFloat(amount))} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: 'none', background: C.accent, color: '#000', fontWeight: 600 }}>Sauvegarder</button>
+          <button onClick={() => { const val = parseFloat(amount); if (!isNaN(val) && val >= 0) onSave(val); }} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: 'none', background: C.accent, color: '#000', fontWeight: 600 }}>Sauvegarder</button>
         </div>
       </div>
     </div>
