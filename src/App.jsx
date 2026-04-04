@@ -16,6 +16,7 @@ export default function App() {
   const [session, setSession] = useState(undefined);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('dashboard');
+  const [viewMode, setViewMode] = useState('month');
   const [month, setMonth] = useState(now.getMonth());
   const [year, setYear] = useState(now.getFullYear());
   const [txs, setTxs] = useState([]);
@@ -107,6 +108,8 @@ export default function App() {
   const signOut = () => supabase.auth.signOut();
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); };
+  const prevYear = () => setYear((y) => y - 1);
+  const nextYear = () => setYear((y) => y + 1);
 
   const tabs = [
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Tableau' },
@@ -127,17 +130,26 @@ export default function App() {
             <div style={{ fontSize: 11, color: C.textSec, fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 2 }}>Budget</div>
             <div style={{ fontSize: 17, fontWeight: 600, fontFamily: "'DM Serif Display',serif", color: C.accentL }}>Balance</div>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.card, border: `1px solid ${C.border}`, borderRadius: 24, padding: '6px 14px' }}>
-            <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronLeft size={16} /></button>
-            <span style={{ fontSize: 13, fontWeight: 500, minWidth: 110, textAlign: 'center', color: C.text }}>{MONTHS_FR[month]} {year}</span>
-            <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronRight size={16} /></button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ display: 'flex', gap: 4, background: C.card, border: `1px solid ${C.border}`, borderRadius: 20, padding: '4px 6px' }}>
+              {['month', 'year'].map((m) => (
+                <button key={m} onClick={() => setViewMode(m)} style={{ padding: '5px 12px', borderRadius: 16, background: viewMode === m ? C.accent : 'transparent', color: viewMode === m ? '#000' : C.textSec, fontSize: 11, fontWeight: 500, border: 'none', transition: 'all .15s' }}>
+                  {m === 'month' ? 'Mois' : 'Année'}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: C.card, border: `1px solid ${C.border}`, borderRadius: 24, padding: '6px 14px' }}>
+              <button onClick={viewMode === 'month' ? prevMonth : prevYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronLeft size={16} /></button>
+              <span style={{ fontSize: 13, fontWeight: 500, minWidth: viewMode === 'month' ? 110 : 40, textAlign: 'center', color: C.text }}>{viewMode === 'month' ? `${MONTHS_FR[month]} ${year}` : year}</span>
+              <button onClick={viewMode === 'month' ? nextMonth : nextYear} style={{ background: 'none', border: 'none', color: C.textSec, display: 'flex', padding: 2 }}><ChevronRight size={16} /></button>
+            </div>
           </div>
         </div>
 
         <div style={{ maxWidth: 700, margin: '0 auto', padding: '20px 16px' }}>
           {loading ? <Spinner /> : (
             <>
-              {view === 'dashboard' && <Dashboard txs={txs} cats={cats} month={month} year={year} />}
+              {view === 'dashboard' && <Dashboard txs={txs} cats={cats} month={month} year={year} viewMode={viewMode} />}
               {view === 'transactions' && <Transactions txs={txs} cats={cats} onDelete={deleteTransaction} month={month} year={year} />}
               {view === 'budgets' && <Budgets txs={txs} cats={cats} budgets={budgets} onUpdateBudget={updateBudget} month={month} year={year} />}
               {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} user={session.user} onSignOut={signOut} />}
