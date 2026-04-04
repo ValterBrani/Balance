@@ -139,6 +139,28 @@ export default function App() {
     setNwEntries((es) => es.filter((e) => e.id !== id));
   };
 
+  const addNwAccount = async (acc) => {
+    const { data } = await supabase.from('net_worth_accounts').insert({
+      user_id: session.user.id,
+      ...acc,
+      is_default: false,
+      sort_order: Math.max(0, ...nwAccounts.map((a) => a.sort_order)) + 1,
+    }).select().single();
+    if (data) setNwAccounts((as) => [...as, data]);
+  };
+
+  const deleteNwAccount = async (id) => {
+    await supabase.from('net_worth_accounts').delete().eq('id', id);
+    setNwAccounts((as) => as.filter((a) => a.id !== id));
+  };
+
+  const reorderNwAccounts = async (accounts) => {
+    const updates = accounts.map((a, i) => ({ ...a, sort_order: i + 1 }));
+    const { error } = await supabase.from('net_worth_accounts').upsert(updates);
+    if (error) console.error('Error reordering:', error);
+    else setNwAccounts(updates);
+  };
+
   const signOut = () => supabase.auth.signOut();
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); };
@@ -188,7 +210,7 @@ export default function App() {
               {view === 'transactions' && <Transactions txs={txs} cats={cats} onDelete={deleteTransaction} month={month} year={year} />}
               {view === 'budgets' && <Budgets txs={txs} cats={cats} budgets={budgets} onUpdateBudget={updateBudget} month={month} year={year} />}
               {view === 'networth' && <NetWorth accounts={nwAccounts} entries={nwEntries} month={month} year={year} onUpdateEntry={updateNwEntry} onDeleteEntry={deleteNwEntry} />}
-              {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} user={session.user} onSignOut={signOut} />}
+              {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} nwAccounts={nwAccounts} onAddNwAcc={addNwAccount} onDeleteNwAcc={deleteNwAccount} onReorderNwAcc={reorderNwAccounts} user={session.user} onSignOut={signOut} />}
             </>
           )}
         </div>
