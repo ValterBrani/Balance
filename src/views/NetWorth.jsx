@@ -48,11 +48,12 @@ export default function NetWorth({ accounts, entries, month, year, onAddEntry, o
 
   // Evolution chart - last 12 months
   const chartData = Array.from({ length: 12 }, (_, i) => {
-    const m = (month - 5 + i + 12) % 12;
-    const y = i < (6 - month) ? year - 1 : year;
+    const d = new Date(year, month - 11 + i, 1);
+    const m = d.getMonth();
+    const y = d.getFullYear();
     const monthEntries = entries.filter((e) => {
-      const d = new Date(e.date);
-      return d.getMonth() === m && d.getFullYear() === y;
+      const ed = new Date(e.date);
+      return ed.getMonth() === m && ed.getFullYear() === y;
     });
     const monthNetWorth = monthEntries.reduce((sum, e) => {
       const acc = accounts.find((a) => a.id === e.account_id);
