@@ -8,6 +8,9 @@ export default function NetWorth({ accounts, entries, month, year, onAddEntry, o
   const [editingEntry, setEditingEntry] = useState(null);
   const [editValues, setEditValues] = useState({});
 
+  // Use last day of selected month for new entries
+  const snapshotDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
+
   // Get latest entries for current period
   const periodEntries = entries.filter((e) => {
     const d = new Date(e.date);
@@ -152,12 +155,12 @@ export default function NetWorth({ accounts, entries, month, year, onAddEntry, o
         </Card>
       </div>
 
-      {editingEntry && <EditModal account={accounts.find((a) => a.id === editingEntry)} latestEntry={latestByAccount[editingEntry]} onSave={(amount) => { onUpdateEntry(editingEntry, { ...latestByAccount[editingEntry], amount, date: new Date().toISOString().split('T')[0] }); setEditingEntry(null); }} onClose={() => setEditingEntry(null)} />}
+      {editingEntry && <EditModal account={accounts.find((a) => a.id === editingEntry)} latestEntry={latestByAccount[editingEntry]} snapshotDate={snapshotDate} onSave={(amount) => { onUpdateEntry(editingEntry, { ...latestByAccount[editingEntry], amount, date: snapshotDate }); setEditingEntry(null); }} onClose={() => setEditingEntry(null)} />}
     </div>
   );
 }
 
-function EditModal({ account, latestEntry, onSave, onClose }) {
+function EditModal({ account, latestEntry, snapshotDate, onSave, onClose }) {
   const [amount, setAmount] = useState(latestEntry?.amount || '');
 
   return (
