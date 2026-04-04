@@ -213,31 +213,39 @@ export default function App() {
 
     const missing = [];
 
-    // Group recurring by unique source (description + cat_id + type + amount + frequency)
+    // Group recurring by unique source (description + cat_id + type + amount)
+    // Track earliest date to avoid proposing before the recurrence started
     const groups = {};
     recurring.forEach((tx) => {
       const key = `${tx.description}|${tx.cat_id}|${tx.type}|${tx.amount}`;
-      if (!groups[key] || new Date(tx.date) > new Date(groups[key].date)) {
-        groups[key] = tx;
+      if (!groups[key]) {
+        groups[key] = { latest: tx, earliest: tx };
+      } else {
+        if (new Date(tx.date) > new Date(groups[key].latest.date)) groups[key].latest = tx;
+        if (new Date(tx.date) < new Date(groups[key].earliest.date)) groups[key].earliest = tx;
       }
     });
 
-    Object.values(groups).forEach((src) => {
+    Object.values(groups).forEach(({ latest: src, earliest }) => {
       const freq = src.recurring_frequency || 'monthly';
       const srcDate = new Date(src.date);
+      const firstDate = new Date(earliest.date);
       const expectedDates = [];
+
+      // Don't propose dates before the first occurrence
+      if (periodEnd < firstDate) return;
 
       if (freq === 'monthly') {
         // Same day each month in the selected period
         const day = Math.min(srcDate.getDate(), periodEnd.getDate());
         const expected = new Date(year, month, day);
-        if (expected >= periodStart && expected <= effectiveEnd) {
+        if (expected >= periodStart && expected <= effectiveEnd && expected >= firstDate) {
           expectedDates.push(expected);
         }
       } else {
         // biweekly (+14) or weekly (+7)
         const interval = freq === 'biweekly' ? 14 : 7;
-        let cursor = new Date(srcDate);
+        let cursor = new Date(firstDate);
         // Advance cursor to first date in or after period start
         while (cursor < periodStart) {
           cursor = new Date(cursor.getTime() + interval * 86400000);
@@ -277,19 +285,34 @@ export default function App() {
   useEffect(() => { if (!loading && txs.length > 0) detectMissingRecurring(); }, [detectMissingRecurring, loading]);
 
   const applyRecurring = async (items) => {
-    const toInsert = items.map((tx) => ({
-      user_id: session.user.id,
-      amount: tx.amount,
-      type: tx.type,
-      cat_id: tx.cat_id,
-      description: tx.description,
-      date: tx.date,
-      recurring: true,
-      recurring_frequency: tx.recurring_frequency,
-    }));
-    const { data, error } = await supabase.from('transactions').insert(toInsert).select();
-    if (error) console.error('Error applying recurring:', error);
-    if (data) setTxs((ts) => [...data, ...ts]);
+    // Filter out items that already exist in Supabase to avoid duplicates
+    const toInsert = [];
+    for (const tx of items) {
+      const { data: existing } = await supabase.from('transactions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('description', tx.description)
+        .eq('cat_id', tx.cat_id)
+        .eq('type', tx.type)
+        .eq('date', tx.date);
+      if (!existing || existing.length === 0) {
+        toInsert.push({
+          user_id: session.user.id,
+          amount: tx.amount,
+          type: tx.type,
+          cat_id: tx.cat_id,
+          description: tx.description,
+          date: tx.date,
+          recurring: true,
+          recurring_frequency: tx.recurring_frequency,
+        });
+      }
+    }
+    if (toInsert.length > 0) {
+      const { data, error } = await supabase.from('transactions').insert(toInsert).select();
+      if (error) console.error('Error applying recurring:', error);
+      if (data) setTxs((ts) => [...data, ...ts]);
+    }
     // Mark period as handled so unchecked items don't come back
     setIgnoredPeriods((s) => new Set(s).add(`${year}-${month}`));
     setMissingRecurring([]);
