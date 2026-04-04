@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { X, LogOut } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { C } from '@/utils/theme';
+import NetWorthSettings from './NetWorthSettings';
 
-export default function SettingsView({ cats, onAddCat, onDeleteCat, user, onSignOut }) {
+export default function SettingsView({ cats, onAddCat, onDeleteCat, nwAccounts, onAddNwAcc, onDeleteNwAcc, onReorderNwAcc, user, onSignOut }) {
   const [newCat, setNewCat] = useState({ name: '', icon: '🏷️', color: '#888888' });
 
   const addCat = async () => {
@@ -48,6 +49,10 @@ export default function SettingsView({ cats, onAddCat, onDeleteCat, user, onSign
             Ajouter
           </button>
         </div>
+      </Card>
+
+      <Card style={{ marginTop: 20 }}>
+        <NetWorthSettings accounts={nwAccounts} onAddAccount={onAddNwAcc} onDeleteAccount={onDeleteNwAcc} onReorder={onReorderNwAcc} />
       </Card>
     </div>
   );

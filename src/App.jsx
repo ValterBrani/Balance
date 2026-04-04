@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, ChevronLeft, ChevronRight, LayoutDashboard, List, Target, Settings } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, LayoutDashboard, List, Target, Settings, TrendingUp } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
-import { DEFAULT_CATS } from '@/utils/defaults';
+import { DEFAULT_CATS, DEFAULT_NET_WORTH_ACCOUNTS } from '@/utils/defaults';
 import { C, gs, MONTHS_FR } from '@/utils/theme';
 import { Spinner } from '@/components/ui';
 import AddModal from '@/components/AddModal';
@@ -9,6 +9,7 @@ import AuthScreen from '@/views/AuthScreen';
 import Dashboard from '@/views/Dashboard';
 import Transactions from '@/views/Transactions';
 import Budgets from '@/views/Budgets';
+import NetWorth from '@/views/NetWorth';
 import SettingsView from '@/views/SettingsView';
 
 export default function App() {
@@ -23,6 +24,8 @@ export default function App() {
   const [cats, setCats] = useState([]);
   const [budgets, setBudgets] = useState({});
   const [showAdd, setShowAdd] = useState(false);
+  const [nwAccounts, setNwAccounts] = useState([]);
+  const [nwEntries, setNwEntries] = useState([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -34,6 +37,13 @@ export default function App() {
     const toInsert = DEFAULT_CATS.map((c) => ({ ...c, user_id: userId }));
     const { data, error } = await supabase.from('categories').insert(toInsert).select();
     if (error) console.error('Seed error:', error);
+    return data || [];
+  };
+
+  const seedNetWorthAccounts = async (userId) => {
+    const toInsert = DEFAULT_NET_WORTH_ACCOUNTS.map((a) => ({ ...a, user_id: userId, is_default: true }));
+    const { data, error } = await supabase.from('net_worth_accounts').insert(toInsert).select();
+    if (error) console.error('Seed NW error:', error);
     return data || [];
   };
 
@@ -56,6 +66,15 @@ export default function App() {
     const budgetMap = {};
     (budgetsData || []).forEach((b) => { budgetMap[b.cat_id] = parseFloat(b.amount); });
     setBudgets(budgetMap);
+
+    let { data: nwAccsData } = await supabase.from('net_worth_accounts').select('*').order('sort_order');
+    if (!nwAccsData || nwAccsData.length === 0) {
+      nwAccsData = await seedNetWorthAccounts(session.user.id);
+    }
+    setNwAccounts(nwAccsData || []);
+
+    const { data: nwEntriesData } = await supabase.from('net_worth_entries').select('*').order('date', { ascending: false });
+    setNwEntries(nwEntriesData || []);
 
     setLoading(false);
   }, [session]);
@@ -105,6 +124,74 @@ export default function App() {
     setCats((cs) => cs.filter((c) => c.id !== id));
   };
 
+  const updateNwEntry = async (accountId, entry) => {
+    const dateStr = entry.date || new Date().toISOString().split('T')[0];
+
+    // Check if entry exists (don't use .single() to avoid 406 error)
+    const { data: existing, error: existError } = await supabase.from('net_worth_entries')
+      .select('id')
+      .eq('user_id', session.user.id)
+      .eq('account_id', accountId)
+      .eq('date', dateStr);
+
+    let result;
+    if (existing && existing.length > 0) {
+      // Update existing
+      result = await supabase.from('net_worth_entries')
+        .update({ amount: entry.amount, note: entry.note })
+        .eq('id', existing[0].id)
+        .select()
+        .single();
+    } else {
+      // Insert new
+      result = await supabase.from('net_worth_entries')
+        .insert({
+          user_id: session.user.id,
+          account_id: accountId,
+          amount: entry.amount,
+          date: dateStr,
+          note: entry.note,
+        })
+        .select()
+        .single();
+    }
+
+    if (result.error) console.error('Error updating entry:', result.error);
+    if (result.data) {
+      setNwEntries((es) => {
+        const filtered = es.filter((e) => !(e.account_id === accountId && e.date === dateStr));
+        return [result.data, ...filtered];
+      });
+    }
+  };
+
+  const deleteNwEntry = async (id) => {
+    await supabase.from('net_worth_entries').delete().eq('id', id);
+    setNwEntries((es) => es.filter((e) => e.id !== id));
+  };
+
+  const addNwAccount = async (acc) => {
+    const { data } = await supabase.from('net_worth_accounts').insert({
+      user_id: session.user.id,
+      ...acc,
+      is_default: false,
+      sort_order: Math.max(0, ...nwAccounts.map((a) => a.sort_order)) + 1,
+    }).select().single();
+    if (data) setNwAccounts((as) => [...as, data]);
+  };
+
+  const deleteNwAccount = async (id) => {
+    await supabase.from('net_worth_accounts').delete().eq('id', id);
+    setNwAccounts((as) => as.filter((a) => a.id !== id));
+  };
+
+  const reorderNwAccounts = async (accounts) => {
+    const updates = accounts.map((a, i) => ({ ...a, sort_order: i + 1 }));
+    const { error } = await supabase.from('net_worth_accounts').upsert(updates);
+    if (error) console.error('Error reordering:', error);
+    else setNwAccounts(updates);
+  };
+
   const signOut = () => supabase.auth.signOut();
   const prevMonth = () => { if (month === 0) { setMonth(11); setYear((y) => y - 1); } else setMonth((m) => m - 1); };
   const nextMonth = () => { if (month === 11) { setMonth(0); setYear((y) => y + 1); } else setMonth((m) => m + 1); };
@@ -115,6 +202,7 @@ export default function App() {
     { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Tableau' },
     { id: 'transactions', icon: <List size={18} />, label: 'Transactions' },
     { id: 'budgets', icon: <Target size={18} />, label: 'Budgets' },
+    { id: 'networth', icon: <TrendingUp size={18} />, label: 'Avoir net' },
     { id: 'settings', icon: <Settings size={18} />, label: 'Reglages' },
   ];
 
@@ -152,12 +240,13 @@ export default function App() {
               {view === 'dashboard' && <Dashboard txs={txs} cats={cats} month={month} year={year} viewMode={viewMode} />}
               {view === 'transactions' && <Transactions txs={txs} cats={cats} onDelete={deleteTransaction} month={month} year={year} />}
               {view === 'budgets' && <Budgets txs={txs} cats={cats} budgets={budgets} onUpdateBudget={updateBudget} month={month} year={year} />}
-              {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} user={session.user} onSignOut={signOut} />}
+              {view === 'networth' && <NetWorth accounts={nwAccounts} entries={nwEntries} month={month} year={year} onUpdateEntry={updateNwEntry} onDeleteEntry={deleteNwEntry} />}
+              {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} nwAccounts={nwAccounts} onAddNwAcc={addNwAccount} onDeleteNwAcc={deleteNwAccount} onReorderNwAcc={reorderNwAccounts} user={session.user} onSignOut={signOut} />}
             </>
           )}
         </div>
 
-        {view !== 'settings' && (
+        {view !== 'settings' && view !== 'networth' && (
           <button onClick={() => setShowAdd(true)} style={{ position: 'fixed', bottom: 90, right: 20, width: 54, height: 54, borderRadius: 27, background: `linear-gradient(135deg,${C.accent},${C.accentL})`, border: 'none', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 4px 20px rgba(200,150,42,0.4)`, zIndex: 20 }}>
             <Plus size={24} />
           </button>
