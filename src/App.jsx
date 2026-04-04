@@ -285,19 +285,34 @@ export default function App() {
   useEffect(() => { if (!loading && txs.length > 0) detectMissingRecurring(); }, [detectMissingRecurring, loading]);
 
   const applyRecurring = async (items) => {
-    const toInsert = items.map((tx) => ({
-      user_id: session.user.id,
-      amount: tx.amount,
-      type: tx.type,
-      cat_id: tx.cat_id,
-      description: tx.description,
-      date: tx.date,
-      recurring: true,
-      recurring_frequency: tx.recurring_frequency,
-    }));
-    const { data, error } = await supabase.from('transactions').insert(toInsert).select();
-    if (error) console.error('Error applying recurring:', error);
-    if (data) setTxs((ts) => [...data, ...ts]);
+    // Filter out items that already exist in Supabase to avoid duplicates
+    const toInsert = [];
+    for (const tx of items) {
+      const { data: existing } = await supabase.from('transactions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('description', tx.description)
+        .eq('cat_id', tx.cat_id)
+        .eq('type', tx.type)
+        .eq('date', tx.date);
+      if (!existing || existing.length === 0) {
+        toInsert.push({
+          user_id: session.user.id,
+          amount: tx.amount,
+          type: tx.type,
+          cat_id: tx.cat_id,
+          description: tx.description,
+          date: tx.date,
+          recurring: true,
+          recurring_frequency: tx.recurring_frequency,
+        });
+      }
+    }
+    if (toInsert.length > 0) {
+      const { data, error } = await supabase.from('transactions').insert(toInsert).select();
+      if (error) console.error('Error applying recurring:', error);
+      if (data) setTxs((ts) => [...data, ...ts]);
+    }
     // Mark period as handled so unchecked items don't come back
     setIgnoredPeriods((s) => new Set(s).add(`${year}-${month}`));
     setMissingRecurring([]);
