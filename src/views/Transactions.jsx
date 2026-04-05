@@ -3,14 +3,16 @@ import { Trash2 } from 'lucide-react';
 import { Card, Tag, Amount } from '@/components/ui';
 import { C } from '@/utils/theme';
 
-export default function Transactions({ txs, cats, onDelete, month, year }) {
+export default function Transactions({ txs, cats, onDelete, month, year, viewMode = 'month' }) {
   const [filter, setFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
 
-  const mTxs = txs.filter((t) => {
-    const d = new Date(t.date);
-    return d.getMonth() === month && d.getFullYear() === year;
-  });
+  const mTxs = viewMode === 'year'
+    ? txs.filter((t) => new Date(t.date).getFullYear() === year)
+    : txs.filter((t) => {
+        const d = new Date(t.date);
+        return d.getMonth() === month && d.getFullYear() === year;
+      });
 
   const filtered = mTxs
     .filter((t) => filter === 'all' || t.type === filter)

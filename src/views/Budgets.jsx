@@ -3,14 +3,16 @@ import { Check, Edit2 } from 'lucide-react';
 import { Card } from '@/components/ui';
 import { C, fmt } from '@/utils/theme';
 
-export default function Budgets({ txs, cats, budgets, onUpdateBudget, month, year }) {
+export default function Budgets({ txs, cats, budgets, onUpdateBudget, month, year, viewMode = 'month' }) {
   const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState('');
 
-  const mExpenses = txs.filter((t) => {
-    const d = new Date(t.date);
-    return t.type === 'expense' && d.getMonth() === month && d.getFullYear() === year;
-  });
+  const mExpenses = viewMode === 'year'
+    ? txs.filter((t) => t.type === 'expense' && new Date(t.date).getFullYear() === year)
+    : txs.filter((t) => {
+        const d = new Date(t.date);
+        return t.type === 'expense' && d.getMonth() === month && d.getFullYear() === year;
+      });
 
   const expByCat = {};
   mExpenses.forEach((t) => { expByCat[t.cat_id] = (expByCat[t.cat_id] || 0) + parseFloat(t.amount); });

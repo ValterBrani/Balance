@@ -385,8 +385,8 @@ export default function App() {
           {loading ? <Spinner /> : (
             <>
               {view === 'dashboard' && <Dashboard txs={txs} cats={cats} month={month} year={year} viewMode={viewMode} />}
-              {view === 'transactions' && <Transactions txs={txs} cats={cats} onDelete={deleteTransaction} month={month} year={year} />}
-              {view === 'budgets' && <Budgets txs={txs} cats={cats} budgets={budgets} onUpdateBudget={updateBudget} month={month} year={year} />}
+              {view === 'transactions' && <Transactions txs={txs} cats={cats} onDelete={deleteTransaction} month={month} year={year} viewMode={viewMode} />}
+              {view === 'budgets' && <Budgets txs={txs} cats={cats} budgets={budgets} onUpdateBudget={updateBudget} month={month} year={year} viewMode={viewMode} />}
               {view === 'networth' && <NetWorth accounts={nwAccounts} entries={nwEntries} month={month} year={year} onUpdateEntry={updateNwEntry} onDeleteEntry={deleteNwEntry} />}
               {view === 'settings' && <SettingsView cats={cats} onAddCat={addCategory} onDeleteCat={deleteCategory} nwAccounts={nwAccounts} onAddNwAcc={addNwAccount} onDeleteNwAcc={deleteNwAccount} onReorderNwAcc={reorderNwAccounts} user={session.user} onSignOut={signOut} />}
             </>
