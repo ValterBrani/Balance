@@ -33,7 +33,7 @@ export default function SettingsView({ cats, onAddCat, onDeleteCat, nwAccounts, 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {theme === 'dark' ? <Moon size={16} color={C.accent} /> : <Sun size={16} color={C.accent} />}
-            <span style={{ fontSize: 14, fontWeight: 500 }}>{theme === 'dark' ? 'Mode sombre' : 'Mode clair'}</span>
+            <span style={{ fontSize: 14, fontWeight: 500 }}>Mode sombre</span>
           </div>
           <button onClick={toggle} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: theme === 'dark' ? C.accent : C.textMut, position: 'relative', transition: 'background .2s' }}>
             <span style={{ position: 'absolute', top: 3, left: theme === 'dark' ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left .2s' }} />
