@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { X, LogOut } from 'lucide-react';
+import { X, LogOut, Sun, Moon } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { C } from '@/utils/theme';
+import { useColors, useTheme } from '@/utils/ThemeContext';
 import NetWorthSettings from './NetWorthSettings';
 
 export default function SettingsView({ cats, onAddCat, onDeleteCat, nwAccounts, onAddNwAcc, onDeleteNwAcc, onReorderNwAcc, user, onSignOut }) {
+  const C = useColors();
+  const { theme, toggle } = useTheme();
   const [newCat, setNewCat] = useState({ name: '', icon: '🏷️', color: '#888888' });
 
   const addCat = async () => {
@@ -23,6 +25,18 @@ export default function SettingsView({ cats, onAddCat, onDeleteCat, nwAccounts, 
           </div>
           <button onClick={onSignOut} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', color: C.exp, border: `1px solid ${C.exp}33`, borderRadius: 8, padding: '8px 14px', fontSize: 13 }}>
             <LogOut size={14} /> Deconnexion
+          </button>
+        </div>
+      </Card>
+
+      <Card style={{ marginBottom: 14 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {theme === 'dark' ? <Moon size={16} color={C.accent} /> : <Sun size={16} color={C.accent} />}
+            <span style={{ fontSize: 14, fontWeight: 500 }}>{theme === 'dark' ? 'Mode sombre' : 'Mode clair'}</span>
+          </div>
+          <button onClick={toggle} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: theme === 'dark' ? C.accent : C.textMut, position: 'relative', transition: 'background .2s' }}>
+            <span style={{ position: 'absolute', top: 3, left: theme === 'dark' ? 23 : 3, width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left .2s' }} />
           </button>
         </div>
       </Card>

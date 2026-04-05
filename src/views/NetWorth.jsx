@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Edit2, Trash2 } from 'lucide-react';
 import { Card, Amount } from '@/components/ui';
-import { C, fmt, MONTHS_SHORT } from '@/utils/theme';
+import { fmt, MONTHS_SHORT } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function NetWorth({ accounts, entries, month, year, onAddEntry, onUpdateEntry, onDeleteEntry }) {
+  const C = useColors();
   const [editingEntry, setEditingEntry] = useState(null);
   const [editValues, setEditValues] = useState({});
 
@@ -162,6 +164,7 @@ export default function NetWorth({ accounts, entries, month, year, onAddEntry, o
 }
 
 function EditModal({ account, latestEntry, snapshotDate, onSave, onClose }) {
+  const C = useColors();
   const [amount, setAmount] = useState(latestEntry?.amount || '');
 
   return (

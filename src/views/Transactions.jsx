@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Card, Tag, Amount } from '@/components/ui';
-import { C } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function Transactions({ txs, cats, onDelete, month, year, viewMode = 'month' }) {
+  const C = useColors();
   const [filter, setFilter] = useState('all');
   const [catFilter, setCatFilter] = useState('all');
 

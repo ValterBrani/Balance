@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Repeat, X } from 'lucide-react';
-import { C } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function AddModal({ cats, onAdd, onClose }) {
+  const C = useColors();
   const today = new Date().toISOString().split('T')[0];
   const expCats = cats.filter((c) => c.type !== 'income');
   const incCats = cats.filter((c) => c.type !== 'expense');

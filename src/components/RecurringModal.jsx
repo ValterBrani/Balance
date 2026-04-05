@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { RefreshCw, X, Check, Ban } from 'lucide-react';
-import { C, fmt } from '@/utils/theme';
+import { fmt } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 const FREQ_LABELS = { monthly: 'Mensuelle', biweekly: 'Aux 2 semaines', weekly: 'Hebdomadaire' };
 
 export default function RecurringModal({ missing, cats, onApply, onIgnore, onStopRecurring }) {
+  const C = useColors();
   const [applying, setApplying] = useState(false);
   const [selected, setSelected] = useState(() => new Set(missing.map((_, i) => i)));
 

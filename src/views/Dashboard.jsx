@@ -1,8 +1,10 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { Card, Amount } from '@/components/ui';
-import { C, MONTHS_SHORT, fmt } from '@/utils/theme';
+import { MONTHS_SHORT, fmt } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function Dashboard({ txs, cats, month, year, viewMode = 'month' }) {
+  const C = useColors();
   // Filter transactions based on view mode
   const filteredTxs = viewMode === 'year'
     ? txs.filter((t) => new Date(t.date).getFullYear() === year)
@@ -82,7 +84,7 @@ export default function Dashboard({ txs, cats, month, year, viewMode = 'month' }
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={2} dataKey="value">
                     {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => fmt(v)} contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} />
+                  <Tooltip formatter={(v) => fmt(v)} contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.text }} itemStyle={{ color: C.text }} labelStyle={{ color: C.textSec }} />
                 </PieChart>
               </ResponsiveContainer>
             </>
