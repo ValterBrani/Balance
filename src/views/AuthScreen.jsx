@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { Github } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { Card } from '@/components/ui';
-import { C } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function AuthScreen() {
+  const C = useColors();
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [pass, setPass] = useState('');

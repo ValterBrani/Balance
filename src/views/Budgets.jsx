@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Check, Edit2 } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { C, fmt } from '@/utils/theme';
+import { fmt } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function Budgets({ txs, cats, budgets, onUpdateBudget, month, year, viewMode = 'month' }) {
+  const C = useColors();
   const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState('');
 

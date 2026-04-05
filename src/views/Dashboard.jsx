@@ -1,8 +1,10 @@
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { Card, Amount } from '@/components/ui';
-import { C, MONTHS_SHORT, fmt } from '@/utils/theme';
+import { MONTHS_SHORT, fmt } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function Dashboard({ txs, cats, month, year, viewMode = 'month' }) {
+  const C = useColors();
   // Filter transactions based on view mode
   const filteredTxs = viewMode === 'year'
     ? txs.filter((t) => new Date(t.date).getFullYear() === year)

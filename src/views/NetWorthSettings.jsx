@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { GripVertical, Trash2, Plus } from 'lucide-react';
 import { Card } from '@/components/ui';
-import { C } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 
 export default function NetWorthSettings({ accounts, onAddAccount, onDeleteAccount, onReorder }) {
+  const C = useColors();
   const [showAdd, setShowAdd] = useState(false);
   const [newAcc, setNewAcc] = useState({ name: '', icon: '📦', color: '#6b7280', type: 'asset' });
   const [dragging, setDragging] = useState(null);

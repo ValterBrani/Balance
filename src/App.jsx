@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus, ChevronLeft, ChevronRight, LayoutDashboard, List, Target, Settings, TrendingUp } from 'lucide-react';
 import { supabase } from '@/utils/supabase';
 import { DEFAULT_CATS, DEFAULT_NET_WORTH_ACCOUNTS } from '@/utils/defaults';
-import { C, gs, MONTHS_FR } from '@/utils/theme';
+import { MONTHS_FR, makeGs } from '@/utils/theme';
+import { useColors } from '@/utils/ThemeContext';
 import { Spinner } from '@/components/ui';
 import AddModal from '@/components/AddModal';
 import RecurringModal from '@/components/RecurringModal';
@@ -14,6 +15,7 @@ import NetWorth from '@/views/NetWorth';
 import SettingsView from '@/views/SettingsView';
 
 export default function App() {
+  const C = useColors();
   const now = new Date();
   const [session, setSession] = useState(undefined);
   const [loading, setLoading] = useState(true);
@@ -354,11 +356,11 @@ export default function App() {
   ];
 
   if (session === undefined) return null;
-  if (!session) return <><style>{gs}</style><AuthScreen /></>;
+  if (!session) return <><style>{makeGs(C)}</style><AuthScreen /></>;
 
   return (
     <>
-      <style>{gs}</style>
+      <style>{makeGs(C)}</style>
       <div style={{ minHeight: '100vh', background: C.bg, paddingBottom: 80 }}>
         <div style={{ background: C.surface, borderBottom: `1px solid ${C.border}`, padding: '12px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
