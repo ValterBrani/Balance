@@ -84,7 +84,7 @@ export default function Dashboard({ txs, cats, month, year, viewMode = 'month' }
                   <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={72} paddingAngle={2} dataKey="value">
                     {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
-                  <Tooltip formatter={(v) => fmt(v)} contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12 }} />
+                  <Tooltip formatter={(v) => fmt(v)} contentStyle={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 8, fontSize: 12, color: C.text }} itemStyle={{ color: C.text }} labelStyle={{ color: C.textSec }} />
                 </PieChart>
               </ResponsiveContainer>
             </>
